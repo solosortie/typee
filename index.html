@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+<title>Typee</title>
+<meta name="description" content="Typee is a single-page Markdown editor with live preview. Write on the left, see it rendered on the right — runs entirely in your browser, nothing is uploaded.">
+<meta name="keywords" content="markdown editor, online markdown editor, live markdown preview, markdown to html, local markdown editor">
+<meta name="author" content="Typee">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://typee.pacify.site/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Typee">
+<meta property="og:description" content="A single-page Markdown editor with live preview. Runs entirely in your browser, nothing is uploaded.">
+<meta property="og:url" content="https://typee.pacify.site/">
+<meta property="og:site_name" content="Typee">
+<meta property="og:image" content="assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Typee">
+<meta name="twitter:description" content="A single-page Markdown editor with live preview. Runs entirely in your browser, nothing is uploaded.">
+<meta name="twitter:image" content="assets/og-image.png">
+
+<!-- Favicon -->
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Typee",
+  "description": "A single-page Markdown editor with live preview, running entirely in the browser.",
+  "applicationCategory": "Utility",
+  "operatingSystem": "Any (runs in browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F1E7;
+    --paper-deep: #ECE3CE;
+    --ink: #2A2622;
+    --ink-soft: #55504A;
+    --brass: #8B7355;
+    --brass-line: rgba(139, 115, 85, 0.22);
+    --brass-line-soft: rgba(139, 115, 85, 0.13);
+    --red: #B8453C;
+    --tab-bg: #FBF8F1;
+    --grain-opacity: 0.55;
+
+    --color-transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                         color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                         border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html.dark {
+    --paper: #1C1A17;
+    --paper-deep: #262320;
+    --ink: #EDE6D6;
+    --ink-soft: #B7AD9B;
+    --brass: #9C876C;
+    --brass-line: rgba(196, 176, 148, 0.16);
+    --brass-line-soft: rgba(196, 176, 148, 0.09);
+    --red: #D2665A;
+    --tab-bg: #211E1A;
+    --grain-opacity: 0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--paper);
+    transition: var(--color-transition);
+  }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    color: var(--ink);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: var(--color-transition);
+  }
+
+  /* ---------- Paper texture ---------- */
+  .paper-texture {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: multiply;
+    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .paper-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background:
+      radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(139,115,85,0.06) 100%),
+      linear-gradient(180deg, rgba(139,115,85,0.05) 0%, transparent 8%, transparent 92%, rgba(139,115,85,0.07) 100%);
+  }
+
+  /* ---------- Canvas ---------- */
+  .canvas-wrap {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    z-index: 3;
+  }
+
+  .pane {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    overflow-y: auto;
+    transition: width 0.5s cubic-bezier(0.65, 0, 0.35, 1), left 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.35s ease;
+  }
+
+  .pane::-webkit-scrollbar { width: 10px; }
+  .pane::-webkit-scrollbar-track { background: transparent; }
+  .pane::-webkit-scrollbar-thumb {
+    background: var(--brass-line);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  .pane::-webkit-scrollbar-thumb:hover { background: var(--brass-line); background-clip: padding-box; }
+
+  #editor-pane {
+    left: 0;
+  }
+
+  #render-pane {
+    left: 50%;
+    border-left: 1px solid var(--brass-line);
+  }
+
+  .pane-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 96px 56px 40vh 56px;
+    min-height: 100%;
+  }
+
+  /* Editor mode: full width */
+  .canvas-wrap.editor-only #render-pane { width: 0; opacity: 0; pointer-events: none; }
+  .canvas-wrap.editor-only #editor-pane { width: 100%; }
+
+  /* Split mode */
+  .canvas-wrap.split #editor-pane { width: 50%; }
+  .canvas-wrap.split #render-pane { width: 50%; opacity: 1; }
+
+  /* Preview only mode */
+  .canvas-wrap.preview-only #editor-pane { width: 0; opacity: 0; pointer-events: none; }
+  .canvas-wrap.preview-only #render-pane { left: 0; width: 100%; }
+
+  /* Flow mode: single live-rendered editable pane */
+  #flow-pane {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    left: 0;
+  }
+  .canvas-wrap.flow #editor-pane { width: 0; opacity: 0; pointer-events: none; }
+  .canvas-wrap.flow #render-pane { width: 0; opacity: 0; pointer-events: none; }
+  .canvas-wrap.flow #flow-pane { width: 100%; opacity: 1; pointer-events: auto; left: 0; }
+
+  #editor {
+    width: 100%;
+    min-height: 60vh;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    font-size: 19px;
+    line-height: 1.75;
+    color: var(--ink);
+    caret-color: var(--red);
+    transition: var(--color-transition);
+  }
+
+  #editor::placeholder {
+    color: var(--brass);
+    opacity: 0.55;
+    font-style: italic;
+  }
+
+  /* ---------- Rendered markdown styling ---------- */
+  #render {
+    font-size: 19px;
+    line-height: 1.75;
+    color: var(--ink);
+    transition: var(--color-transition);
+  }
+
+  #render h1, #render h2, #render h3 {
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 1.4em 0 0.5em 0;
+  }
+  #render h1 { font-size: 2.1em; margin-top: 0; }
+  #render h2 { font-size: 1.55em; }
+  #render h3 { font-size: 1.2em; }
+  #render p { margin: 0 0 1em 0; }
+  #render ul, #render ol { margin: 0 0 1em 0; padding-left: 1.4em; }
+  #render li { margin: 0.3em 0; }
+  #render blockquote {
+    margin: 1em 0;
+    padding: 0.2em 0 0.2em 1.1em;
+    border-left: 3px solid var(--red);
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  #render code {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper-deep);
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  #render pre {
+    background: var(--paper-deep);
+    padding: 1em 1.2em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1em 0;
+    border: 1px solid var(--brass-line-soft);
+  }
+  #render pre code { background: none; padding: 0; }
+  #render a { color: var(--red); text-decoration-color: rgba(184,69,60,0.4); }
+  #render hr { border: none; border-top: 1px solid var(--brass-line); margin: 2em 0; }
+  #render strong { font-weight: 700; }
+  #render em { font-style: italic; }
+  #render img { max-width: 100%; border-radius: 4px; }
+  #render table { border-collapse: collapse; margin: 1em 0; width: 100%; }
+  #render th, #render td { border: 1px solid var(--brass-line); padding: 0.5em 0.8em; text-align: left; }
+  #render th { background: var(--paper-deep); font-weight: 600; }
+
+  .render-empty {
+    color: var(--brass);
+    font-style: italic;
+    opacity: 0.6;
+  }
+
+  /* ---------- Flow pane (live inline WYSIWYG) ---------- */
+  #flow {
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    font-size: 19px;
+    line-height: 1.75;
+    color: var(--ink);
+    outline: none;
+    min-height: 60vh;
+    caret-color: var(--red);
+    transition: var(--color-transition);
+  }
+
+  #flow:empty::before {
+    content: attr(data-placeholder);
+    color: var(--brass);
+    opacity: 0.55;
+    font-style: italic;
+    pointer-events: none;
+  }
+
+  #flow .md-syntax {
+    opacity: 0.32;
+    font-style: normal;
+  }
+
+  #flow div[data-heading] {
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0.35em 0 0.15em 0;
+  }
+  #flow .flow-h1 { font-size: 2.1em; }
+  #flow .flow-h2 { font-size: 1.55em; }
+  #flow .flow-h3 { font-size: 1.2em; }
+  #flow strong { font-weight: 700; }
+  #flow em { font-style: italic; }
+  #flow .md-code {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--paper-deep);
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+  }
+  #flow .md-quote-line {
+    display: block;
+    padding-left: 0.9em;
+    border-left: 3px solid var(--red);
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0.15em 0;
+  }
+  #flow div { min-height: 1.75em; }
+
+  /* ---------- Floating tab ---------- */
+  #tab {
+    position: fixed;
+    top: 28px;
+    right: 28px;
+    z-index: 10;
+    background: var(--tab-bg);
+    border-radius: 10px;
+    box-shadow:
+      0 1px 2px rgba(42,38,34,0.08),
+      0 8px 24px rgba(42,38,34,0.14),
+      0 0 0 1px var(--brass-line-soft);
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    width: 258px;
+    user-select: none;
+    transform: rotate(0.4deg);
+    transition: var(--color-transition), box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  html.dark #tab {
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.3),
+      0 8px 24px rgba(0,0,0,0.4),
+      0 0 0 1px var(--brass-line-soft);
+  }
+
+  #tab.dragging {
+    box-shadow:
+      0 4px 8px rgba(42,38,34,0.12),
+      0 18px 40px rgba(42,38,34,0.22),
+      0 0 0 1px var(--brass-line-soft);
+    transform: rotate(0deg) scale(1.015);
+    transition: none;
+  }
+
+  #tab:not(.dragging) {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .tab-handle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    cursor: grab;
+    border-bottom: 1px solid var(--brass-line-soft);
+  }
+
+  .tab-handle:active { cursor: grabbing; }
+
+  .tab-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tab-title .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+
+  .tab-handle-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--brass);
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--brass-line-soft); color: var(--ink); }
+  .icon-btn svg { display: block; }
+
+  .tab-collapse {
+    background: none;
+    border: none;
+    color: var(--brass);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 2px 4px;
+    line-height: 1;
+    border-radius: 4px;
+  }
+  .tab-collapse:hover { background: var(--brass-line-soft); }
+
+  .tab-body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 400px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.25s ease;
+  }
+
+  #tab.collapsed .tab-body {
+    max-height: 0;
+    padding: 0 10px;
+    opacity: 0;
+  }
+
+  .mode-row {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: var(--paper-deep);
+    border-radius: 7px;
+    margin-bottom: 6px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 7px 3px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .mode-btn:hover { color: var(--ink); }
+
+  .mode-btn.active {
+    background: var(--tab-bg);
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(42,38,34,0.12);
+  }
+
+  .tab-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 8px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 6px;
+    width: 100%;
+  }
+
+  .tab-action:hover { background: var(--brass-line-soft); }
+
+  .tab-action svg { flex-shrink: 0; opacity: 0.75; }
+
+  .tab-action .kbd {
+    margin-left: auto;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    color: var(--brass);
+    background: var(--paper-deep);
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+
+  .tab-divider {
+    height: 1px;
+    background: var(--brass-line-soft);
+    margin: 4px 2px;
+  }
+
+  .tab-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 8px 2px 8px;
+    font-size: 11px;
+    color: var(--brass);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Collapsed pill state */
+  #tab.collapsed {
+    width: auto;
+  }
+  #tab.collapsed .tab-handle {
+    border-bottom: none;
+    padding: 10px 12px;
+  }
+
+  /* Save flash */
+  .save-flash {
+    color: var(--red);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .save-flash.show { opacity: 1; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 7px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- On-site confirmation card ---------- */
+  #confirmCard {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px) scale(0.97);
+    background: var(--tab-bg);
+    border-radius: 12px;
+    padding: 16px 18px 14px 18px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    z-index: 25;
+    width: 300px;
+    box-shadow:
+      0 2px 4px rgba(42,38,34,0.1),
+      0 16px 40px rgba(42,38,34,0.22),
+      0 0 0 1px var(--brass-line-soft);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1), var(--color-transition);
+  }
+
+  #confirmCard.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  #confirmText {
+    margin: 0 0 14px 0;
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .confirm-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 7px 13px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+
+  .confirm-btn-quiet {
+    background: none;
+    color: var(--ink-soft);
+  }
+  .confirm-btn-quiet:hover { background: var(--brass-line-soft); }
+
+  .confirm-btn-loud {
+    background: var(--red);
+    color: #FBF8F1;
+  }
+  .confirm-btn-loud:hover { opacity: 0.88; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pane, #tab, .tab-body, #toast, #confirmCard { transition: none !important; }
+  }
+
+  @media (max-width: 720px) {
+    .pane-inner { padding: 80px 24px 40vh 24px; }
+    #tab { width: 226px; right: 16px; top: 16px; }
+    #confirmCard { width: calc(100% - 32px); }
+    .canvas-wrap.split #editor-pane,
+    .canvas-wrap.split #render-pane { width: 100%; left: 0; }
+    .canvas-wrap.split #render-pane { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="paper-texture" xmlns="http://www.w3.org/2000/svg">
+  <filter id="grain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.02 0"/>
+  </filter>
+  <rect width="100%" height="100%" filter="url(#grain)"/>
+</svg>
+<div class="paper-vignette"></div>
+
+<div class="canvas-wrap split" id="canvasWrap">
+  <div class="pane" id="editor-pane">
+    <div class="pane-inner">
+      <textarea id="editor" placeholder="Start writing…" spellcheck="false" autofocus></textarea>
+    </div>
+  </div>
+  <div class="pane" id="render-pane">
+    <div class="pane-inner">
+      <div id="render"><p class="render-empty">Nothing to preview yet.</p></div>
+    </div>
+  </div>
+  <div class="pane" id="flow-pane">
+    <div class="pane-inner">
+      <div id="flow" contenteditable="true" spellcheck="false" data-placeholder="Start writing… your markdown resolves as you type."></div>
+    </div>
+  </div>
+</div>
+
+<div id="tab">
+  <div class="tab-handle" id="tabHandle">
+    <span class="tab-title"><span class="dot"></span>Typee</span>
+    <span class="tab-handle-actions">
+      <button class="icon-btn" id="themeToggle" title="Toggle night page" aria-label="Toggle dark mode">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <button class="tab-collapse" id="tabCollapse" title="Collapse" aria-label="Collapse panel">–</button>
+    </span>
+  </div>
+  <div class="tab-body">
+    <div class="mode-row">
+      <button class="mode-btn active" data-mode="split">Split</button>
+      <button class="mode-btn" data-mode="flow">Flow</button>
+      <button class="mode-btn" data-mode="editor-only">Write</button>
+      <button class="mode-btn" data-mode="preview-only">Read</button>
+    </div>
+
+    <button class="tab-action" id="exportMd">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M6 3v14a2 2 0 0 0 2 2h11"/><path d="M6 3h9l5 5v11"/><path d="M9 13l2 2 4-4"/></svg>
+      Export as Markdown
+      <span class="kbd">.md</span>
+    </button>
+
+    <button class="tab-action" id="exportHtml">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Export as HTML
+      <span class="kbd">.html</span>
+    </button>
+
+    <button class="tab-action" id="copyBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy rendered text
+    </button>
+
+    <div class="tab-divider"></div>
+
+    <button class="tab-action" id="clearBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Clear page
+    </button>
+
+    <div class="tab-footer-row">
+      <span id="wordCount">0 words</span>
+      <span class="save-flash" id="saveFlash">saved</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="confirmCard" role="alertdialog" aria-live="assertive">
+  <p id="confirmText">Clear this page?</p>
+  <div class="confirm-actions">
+    <button id="confirmNo" class="confirm-btn confirm-btn-quiet">Cancel</button>
+    <button id="confirmYes" class="confirm-btn confirm-btn-loud">Clear page</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const editor = document.getElementById('editor');
+  const render = document.getElementById('render');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const wordCount = document.getElementById('wordCount');
+  const saveFlash = document.getElementById('saveFlash');
+  const toast = document.getElementById('toast');
+
+  // ---------- Minimal markdown renderer (no deps, local only) ----------
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function inline(text) {
+    text = escapeHtml(text);
+    // code spans first, to protect content
+    const codeSpans = [];
+    text = text.replace(/`([^`]+)`/g, (m, code) => {
+      codeSpans.push(code);
+      return `\u0000CODE${codeSpans.length - 1}\u0000`;
+    });
+    // images
+    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
+    // links
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // bold+italic
+    text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    text = text.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
+    // strikethrough
+    text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    // restore code spans
+    text = text.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => `<code>${codeSpans[i]}</code>`);
+    return text;
+  }
+
+  function renderMarkdown(src) {
+    if (!src.trim()) return '<p class="render-empty">Nothing to preview yet.</p>';
+
+    const lines = src.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    let inList = null; // 'ul' | 'ol'
+    let inCode = false;
+    let codeBuf = [];
+    let paraBuf = [];
+    let inBlockquote = false;
+    let bqBuf = [];
+
+    function flushPara() {
+      if (paraBuf.length) {
+        html += `<p>${inline(paraBuf.join(' '))}</p>`;
+        paraBuf = [];
+      }
+    }
+    function closeList() {
+      if (inList) { html += `</${inList}>`; inList = null; }
+    }
+    function flushBq() {
+      if (bqBuf.length) {
+        html += `<blockquote>${inline(bqBuf.join(' '))}</blockquote>`;
+        bqBuf = [];
+      }
+      inBlockquote = false;
+    }
+
+    while (i < lines.length) {
+      const raw = lines[i];
+      const line = raw;
+
+      // code fence
+      if (/^```/.test(line.trim())) {
+        flushPara(); closeList(); flushBq();
+        if (!inCode) { inCode = true; codeBuf = []; }
+        else {
+          html += `<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`;
+          inCode = false;
+        }
+        i++; continue;
+      }
+      if (inCode) { codeBuf.push(raw); i++; continue; }
+
+      const trimmed = line.trim();
+
+      // blank line
+      if (trimmed === '') {
+        flushPara(); closeList(); flushBq();
+        i++; continue;
+      }
+
+      // heading
+      const h = trimmed.match(/^(#{1,3})\s+(.*)$/);
+      if (h) {
+        flushPara(); closeList(); flushBq();
+        const level = h[1].length;
+        html += `<h${level}>${inline(h[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      // hr
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+        flushPara(); closeList(); flushBq();
+        html += '<hr>';
+        i++; continue;
+      }
+
+      // blockquote
+      if (/^>\s?/.test(trimmed)) {
+        flushPara(); closeList();
+        inBlockquote = true;
+        bqBuf.push(trimmed.replace(/^>\s?/, ''));
+        i++; continue;
+      } else if (inBlockquote) {
+        flushBq();
+      }
+
+      // unordered list
+      const ul = trimmed.match(/^[-*+]\s+(.*)$/);
+      if (ul) {
+        flushPara();
+        if (inList !== 'ul') { closeList(); html += '<ul>'; inList = 'ul'; }
+        html += `<li>${inline(ul[1])}</li>`;
+        i++; continue;
+      }
+
+      // ordered list
+      const ol = trimmed.match(/^\d+\.\s+(.*)$/);
+      if (ol) {
+        flushPara();
+        if (inList !== 'ol') { closeList(); html += '<ol>'; inList = 'ol'; }
+        html += `<li>${inline(ol[1])}</li>`;
+        i++; continue;
+      }
+
+      closeList();
+      paraBuf.push(trimmed);
+      i++;
+    }
+    flushPara(); closeList(); flushBq();
+    if (inCode && codeBuf.length) {
+      html += `<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`;
+    }
+    return html;
+  }
+
+  // ---------- Word count ----------
+  function updateWordCount(text) {
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    wordCount.textContent = words === 1 ? '1 word' : `${words} words`;
+  }
+
+  // ---------- Persistence (local only) ----------
+  const STORAGE_KEY = 'typee-content';
+  let saveTimer = null;
+
+  function save(text) {
+    try {
+      localStorage.setItem(STORAGE_KEY, text);
+      saveFlash.classList.add('show');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => saveFlash.classList.remove('show'), 900);
+    } catch (e) { /* storage unavailable, fail silently */ }
+  }
+
+  function load() {
+    try { return localStorage.getItem(STORAGE_KEY) || ''; }
+    catch (e) { return ''; }
+  }
+
+  // ---------- Core update loop ----------
+  let debounce = null;
+  function update() {
+    const text = editor.value;
+    render.innerHTML = renderMarkdown(text);
+    updateWordCount(text);
+    clearTimeout(debounce);
+    debounce = setTimeout(() => save(text), 400);
+  }
+
+  editor.addEventListener('input', update);
+
+  // Init
+  const saved = load();
+  if (saved) editor.value = saved;
+  update();
+  editor.focus();
+
+  // ---------- Theme (dark / light) ----------
+  const THEME_KEY = 'typee-theme';
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+
+  const sunPath = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
+  const moonPath = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>';
+
+  function applyTheme(isDark) {
+    document.documentElement.classList.toggle('dark', isDark);
+    themeIcon.innerHTML = isDark ? moonPath : sunPath;
+    themeToggle.title = isDark ? 'Switch to day page' : 'Switch to night page';
+    themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  }
+
+  function loadTheme() {
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored) return stored === 'dark';
+    } catch (e) {}
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  applyTheme(loadTheme());
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = !document.documentElement.classList.contains('dark');
+    applyTheme(isDark);
+    try { localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+  });
+
+  // ---------- Mode switching ----------
+  const modeButtons = document.querySelectorAll('.mode-btn');
+  const flow = document.getElementById('flow');
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.mode;
+
+      if (mode === 'flow') {
+        syncFlowFromEditor();
+      } else if (canvasWrap.className.includes('flow')) {
+        syncEditorFromFlow();
+      }
+
+      canvasWrap.className = 'canvas-wrap ' + mode;
+
+      if (mode === 'flow') {
+        setTimeout(() => flow.focus(), 50);
+      } else if (mode !== 'preview-only') {
+        setTimeout(() => editor.focus(), 50);
+      }
+    });
+  });
+
+  // ---------- Flow mode: live inline markdown rendering ----------
+  // Each line is a <div>. We re-render only the active line's inline
+  // styling on input, and restore caret position by character offset
+  // so typing never jumps the cursor.
+
+  function flowLineToPlainText(div) {
+    return div.textContent;
+  }
+
+  function getFlowPlainText() {
+    const divs = flow.querySelectorAll(':scope > div');
+    if (!divs.length) return flow.textContent || '';
+    return Array.from(divs).map(d => d.textContent).join('\n');
+  }
+
+  function syncFlowFromEditor() {
+    const text = editor.value;
+    flow.innerHTML = '';
+    const lines = text.split('\n');
+    lines.forEach(line => {
+      const div = document.createElement('div');
+      renderFlowLine(div, line);
+      flow.appendChild(div);
+    });
+    if (!lines.length || (lines.length === 1 && lines[0] === '')) {
+      flow.innerHTML = '';
+    }
+  }
+
+  function syncEditorFromFlow() {
+    editor.value = getFlowPlainText();
+    update();
+  }
+
+  // Renders a single line's inline markdown into styled spans,
+  // keeping original syntax characters visible but dimmed (so
+  // editing stays predictable — nothing silently disappears).
+  function renderFlowLine(div, raw) {
+    if (raw === '') { div.innerHTML = '<br>'; div.removeAttribute('data-heading'); return; }
+
+    let text = raw;
+    const heading = text.match(/^(#{1,3})(\s+)(.*)$/);
+    const quote = text.match(/^(>\s?)(.*)$/);
+
+    if (heading) {
+      const level = heading[1].length;
+      div.setAttribute('data-heading', level);
+      div.innerHTML = `<span class="md-syntax">${escapeHtml(heading[1] + heading[2])}</span><span class="flow-h flow-h${level}">${inlineFlow(heading[3]) || '<br>'}</span>`;
+      return;
+    }
+
+    div.removeAttribute('data-heading');
+
+    if (quote) {
+      div.innerHTML = `<span class="md-quote-line"><span class="md-syntax">${escapeHtml(quote[1])}</span>${inlineFlow(quote[2])}</span>`;
+      return;
+    }
+
+    div.innerHTML = inlineFlow(text) || '<br>';
+  }
+
+  // Same inline rules as the static renderer, but keeps ** and _ etc
+  // visible (dimmed) rather than stripping them, since this pane is
+  // still the editable source of truth.
+  function inlineFlow(text) {
+    let t = escapeHtml(text);
+    const spans = [];
+    t = t.replace(/`([^`]+)`/g, (m, code) => {
+      spans.push(`<span class="md-syntax">\`</span><span class="md-code">${code}</span><span class="md-syntax">\`</span>`);
+      return `\u0000S${spans.length - 1}\u0000`;
+    });
+    t = t.replace(/\*\*\*([^*]+)\*\*\*/g, (m, c) => wrapFlow('***', c, 'strong-em'));
+    t = t.replace(/\*\*([^*]+)\*\*/g, (m, c) => wrapFlow('**', c, 'strong'));
+    t = t.replace(/\*([^*]+)\*/g, (m, c) => wrapFlow('*', c, 'em'));
+    t = t.replace(/~~([^~]+)~~/g, (m, c) => wrapFlow('~~', c, 'del'));
+    t = t.replace(/\u0000S(\d+)\u0000/g, (m, i) => spans[i]);
+    return t;
+  }
+
+  function wrapFlow(mark, content, kind) {
+    const open = `<span class="md-syntax">${mark}</span>`;
+    const close = `<span class="md-syntax">${mark}</span>`;
+    if (kind === 'strong') return `${open}<strong>${content}</strong>${close}`;
+    if (kind === 'em') return `${open}<em>${content}</em>${close}`;
+    if (kind === 'del') return `${open}<del>${content}</del>${close}`;
+    if (kind === 'strong-em') return `${open}<strong><em>${content}</em></strong>${close}`;
+    return content;
+  }
+
+  // Caret offset helpers (character offset within a single line div)
+  function getCaretOffset(div) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return 0;
+    const range = sel.getRangeAt(0).cloneRange();
+    range.selectNodeContents(div);
+    range.setEnd(sel.focusNode, sel.focusOffset);
+    return range.toString().length;
+  }
+
+  function setCaretOffset(div, offset) {
+    const walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null);
+    let node, count = 0;
+    while ((node = walker.nextNode())) {
+      const len = node.textContent.length;
+      if (count + len >= offset) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.setStart(node, offset - count);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        return;
+      }
+      count += len;
+    }
+    // offset beyond content — place at end
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(div);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function getCurrentLineDiv() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return null;
+    let node = sel.getRangeAt(0).startContainer;
+    while (node && node.parentNode !== flow && node !== flow) {
+      node = node.parentNode;
+    }
+    if (node === flow) return null;
+    return node;
+  }
+
+  let flowDebounce = null;
+  flow.addEventListener('input', (e) => {
+    // Ensure every top-level child is a div (contenteditable sometimes
+    // inserts loose text nodes / uses different wrapper elements).
+    normalizeFlowChildren();
+
+    const lineDiv = getCurrentLineDiv();
+    if (lineDiv) {
+      const offset = getCaretOffset(lineDiv);
+      const raw = lineDiv.textContent;
+      renderFlowLine(lineDiv, raw);
+      setCaretOffset(lineDiv, offset);
+    }
+
+    clearTimeout(flowDebounce);
+    flowDebounce = setTimeout(() => {
+      const text = getFlowPlainText();
+      editor.value = text;
+      render.innerHTML = renderMarkdown(text);
+      updateWordCount(text);
+      save(text);
+    }, 250);
+  });
+
+  function normalizeFlowChildren() {
+    Array.from(flow.childNodes).forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+        const div = document.createElement('div');
+        div.textContent = node.textContent;
+        flow.replaceChild(div, node);
+      } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'DIV') {
+        // stray element at top level (e.g. browser inserted <p>, <br> wrapper) — wrap it
+        const div = document.createElement('div');
+        div.innerHTML = node.outerHTML;
+        flow.replaceChild(div, node);
+      }
+    });
+  }
+
+  flow.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const lineDiv = getCurrentLineDiv();
+      const sel = window.getSelection();
+      const offset = lineDiv ? getCaretOffset(lineDiv) : 0;
+      const raw = lineDiv ? lineDiv.textContent : '';
+      const before = raw.slice(0, offset);
+      const after = raw.slice(offset);
+
+      const newDiv = document.createElement('div');
+      renderFlowLine(newDiv, after);
+
+      if (lineDiv) {
+        renderFlowLine(lineDiv, before);
+        lineDiv.after(newDiv);
+      } else {
+        flow.appendChild(newDiv);
+      }
+      setCaretOffset(newDiv, 0);
+
+      clearTimeout(flowDebounce);
+      flowDebounce = setTimeout(() => {
+        const text = getFlowPlainText();
+        editor.value = text;
+        render.innerHTML = renderMarkdown(text);
+        updateWordCount(text);
+        save(text);
+      }, 100);
+    }
+  });
+
+  // ---------- Toast ----------
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  // ---------- Export ----------
+  function downloadFile(filename, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Always pull the freshest text regardless of active mode — Flow
+  // mode's sync to `editor.value` is debounced, so export/copy must
+  // not rely on that debounce having already fired.
+  function currentMarkdownText() {
+    if (canvasWrap.className.includes('flow')) return getFlowPlainText();
+    return editor.value;
+  }
+
+  document.getElementById('exportMd').addEventListener('click', () => {
+    downloadFile('typee-note.md', currentMarkdownText(), 'text/markdown');
+    showToast('Downloaded typee-note.md');
+  });
+
+  document.getElementById('exportHtml').addEventListener('click', () => {
+    const renderedHtml = renderMarkdown(currentMarkdownText());
+    const doc = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Typee note</title>
+<style>
+body{font-family:Georgia,serif;max-width:720px;margin:60px auto;padding:0 24px;line-height:1.75;color:#2A2622;background:#F6F1E7;}
+h1,h2,h3{font-weight:600;line-height:1.25;}
+blockquote{border-left:3px solid #B8453C;margin:1em 0;padding-left:1.1em;color:#55504A;font-style:italic;}
+code{background:#ECE3CE;padding:0.1em 0.4em;border-radius:3px;}
+pre{background:#ECE3CE;padding:1em 1.2em;border-radius:4px;overflow-x:auto;}
+pre code{background:none;padding:0;}
+a{color:#B8453C;}
+</style></head><body>${renderedHtml}</body></html>`;
+    downloadFile('typee-note.html', doc, 'text/html');
+    showToast('Downloaded typee-note.html');
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    try {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = renderMarkdown(currentMarkdownText());
+      await navigator.clipboard.writeText(tempDiv.innerText);
+      showToast('Rendered text copied');
+    } catch (e) {
+      showToast('Copy failed — try selecting manually');
+    }
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (!editor.value.trim() && !flow.textContent.trim()) return;
+    showConfirm('Clear this page? This can\'t be undone.', () => {
+      editor.value = '';
+      flow.innerHTML = '';
+      update();
+      if (canvasWrap.className.includes('flow')) flow.focus(); else editor.focus();
+      showToast('Page cleared');
+    });
+  });
+
+  // ---------- On-site confirmation (replaces native confirm()) ----------
+  const confirmCard = document.getElementById('confirmCard');
+  const confirmText = document.getElementById('confirmText');
+  const confirmYes = document.getElementById('confirmYes');
+  const confirmNo = document.getElementById('confirmNo');
+  let pendingConfirm = null;
+
+  function showConfirm(message, onConfirm) {
+    confirmText.textContent = message;
+    pendingConfirm = onConfirm;
+    confirmCard.classList.add('show');
+  }
+
+  function hideConfirm() {
+    confirmCard.classList.remove('show');
+    pendingConfirm = null;
+  }
+
+  confirmYes.addEventListener('click', () => {
+    const fn = pendingConfirm;
+    hideConfirm();
+    if (fn) fn();
+  });
+
+  confirmNo.addEventListener('click', hideConfirm);
+
+  document.addEventListener('keydown', (e) => {
+    if (confirmCard.classList.contains('show') && e.key === 'Escape') hideConfirm();
+  });
+
+  // ---------- Draggable tab ----------
+  const tab = document.getElementById('tab');
+  const handle = document.getElementById('tabHandle');
+  const collapseBtn = document.getElementById('tabCollapse');
+  let dragging = false, offsetX = 0, offsetY = 0;
+
+  function setTabPosition(x, y) {
+    const maxX = window.innerWidth - tab.offsetWidth - 8;
+    const maxY = window.innerHeight - tab.offsetHeight - 8;
+    x = Math.max(8, Math.min(x, maxX));
+    y = Math.max(8, Math.min(y, maxY));
+    tab.style.left = x + 'px';
+    tab.style.top = y + 'px';
+    tab.style.right = 'auto';
+  }
+
+  handle.addEventListener('mousedown', (e) => {
+    if (e.target.closest('#tabCollapse') || e.target.closest('#themeToggle')) return;
+    dragging = true;
+    tab.classList.add('dragging');
+    const rect = tab.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    setTabPosition(e.clientX - offsetX, e.clientY - offsetY);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (dragging) {
+      dragging = false;
+      tab.classList.remove('dragging');
+    }
+  });
+
+  // touch support
+  handle.addEventListener('touchstart', (e) => {
+    if (e.target.closest('#tabCollapse') || e.target.closest('#themeToggle')) return;
+    dragging = true;
+    tab.classList.add('dragging');
+    const rect = tab.getBoundingClientRect();
+    const t = e.touches[0];
+    offsetX = t.clientX - rect.left;
+    offsetY = t.clientY - rect.top;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    setTabPosition(t.clientX - offsetX, t.clientY - offsetY);
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => {
+    if (dragging) { dragging = false; tab.classList.remove('dragging'); }
+  });
+
+  collapseBtn.addEventListener('click', () => {
+    tab.classList.toggle('collapsed');
+    collapseBtn.textContent = tab.classList.contains('collapsed') ? '+' : '–';
+    collapseBtn.setAttribute('aria-label', tab.classList.contains('collapsed') ? 'Expand panel' : 'Collapse panel');
+  });
+
+  // ---------- Keyboard shortcuts ----------
+  document.addEventListener('keydown', (e) => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key === 's') {
+      e.preventDefault();
+      downloadFile('typee-note.md', currentMarkdownText(), 'text/markdown');
+      showToast('Downloaded typee-note.md');
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
