@@ -29,12 +29,8 @@
 
 <!-- Favicon -->
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
-<link rel="shortcut icon" href="assets/favicon.ico">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="assets/favicon.svg">
+<meta name="theme-color" content="#F5F0E6" id="themeColorMeta">
 
 <!-- Structured data -->
 <script type="application/ld+json">
@@ -54,33 +50,45 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Source+Serif+4:ital,opsz,wght@1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #F6F1E7;
-    --paper-deep: #ECE3CE;
+    --paper: #F5F0E6;
+    --paper-deep: #EBE3D4;
     --ink: #2A2622;
-    --ink-soft: #55504A;
+    --ink-soft: #5C564E;
     --brass: #8B7355;
-    --brass-line: rgba(139, 115, 85, 0.22);
-    --brass-line-soft: rgba(139, 115, 85, 0.13);
+    --brass-line: rgba(139, 115, 85, 0.20);
+    --brass-line-soft: rgba(139, 115, 85, 0.11);
     --red: #B8453C;
-    --tab-bg: #FBF8F1;
-    --grain-opacity: 0.55;
+    --tab-bg: #FAF7F0;
+    --tab-elevated: #FFFFFF;
+    --grain-opacity: 0.50;
+    --scroll-thumb: rgba(139, 115, 85, 0.28);
+    --scroll-thumb-hover: rgba(139, 115, 85, 0.48);
+    --shadow-soft: 0 1px 2px rgba(42,38,34,0.06), 0 8px 24px rgba(42,38,34,0.12);
+    --shadow-lift: 0 4px 8px rgba(42,38,34,0.10), 0 18px 40px rgba(42,38,34,0.18);
 
-    --color-transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-                         color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-                         border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    --color-transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                         color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                         border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                         box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                         opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   html.dark {
-    --paper: #1C1A17;
-    --paper-deep: #262320;
+    --paper: #1A1815;
+    --paper-deep: #24211D;
     --ink: #EDE6D6;
-    --ink-soft: #B7AD9B;
-    --brass: #9C876C;
-    --brass-line: rgba(196, 176, 148, 0.16);
-    --brass-line-soft: rgba(196, 176, 148, 0.09);
+    --ink-soft: #B0A694;
+    --brass: #A89070;
+    --brass-line: rgba(196, 176, 148, 0.14);
+    --brass-line-soft: rgba(196, 176, 148, 0.08);
     --red: #D2665A;
-    --tab-bg: #211E1A;
+    --tab-bg: #221F1B;
+    --tab-elevated: #2A2622;
     --grain-opacity: 0;
+    --scroll-thumb: rgba(196, 176, 148, 0.22);
+    --scroll-thumb-hover: rgba(196, 176, 148, 0.40);
+    --shadow-soft: 0 1px 2px rgba(0,0,0,0.28), 0 10px 28px rgba(0,0,0,0.38);
+    --shadow-lift: 0 4px 10px rgba(0,0,0,0.35), 0 20px 48px rgba(0,0,0,0.5);
   }
 
   * { box-sizing: border-box; }
@@ -108,7 +116,7 @@
     z-index: 1;
     opacity: var(--grain-opacity);
     mix-blend-mode: multiply;
-    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .paper-vignette {
@@ -117,8 +125,14 @@
     pointer-events: none;
     z-index: 2;
     background:
-      radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(139,115,85,0.06) 100%),
-      linear-gradient(180deg, rgba(139,115,85,0.05) 0%, transparent 8%, transparent 92%, rgba(139,115,85,0.07) 100%);
+      radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(139,115,85,0.05) 100%),
+      linear-gradient(180deg, rgba(139,115,85,0.04) 0%, transparent 8%, transparent 92%, rgba(139,115,85,0.06) 100%);
+    transition: opacity 0.5s ease;
+  }
+  html.dark .paper-vignette {
+    background:
+      radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,0.25) 100%),
+      linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 10%, transparent 90%, rgba(0,0,0,0.2) 100%);
   }
 
   /* ---------- Canvas ---------- */
@@ -136,26 +150,38 @@
     width: 50%;
     overflow-y: auto;
     transition: width 0.5s cubic-bezier(0.65, 0, 0.35, 1), left 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.35s ease;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .pane:hover,
+  .pane:focus-within {
+    scrollbar-color: var(--scroll-thumb) transparent;
   }
 
-  .pane::-webkit-scrollbar { width: 10px; }
+  /* Overlay-style scrollbar — one per pane in Split (editor | preview).
+     Hidden until hover/focus so the paper stays clean. */
+  .pane::-webkit-scrollbar { width: 6px; height: 6px; }
+  .pane::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
   .pane::-webkit-scrollbar-track { background: transparent; }
+  .pane::-webkit-scrollbar-corner { background: transparent; }
   .pane::-webkit-scrollbar-thumb {
-    background: var(--brass-line);
-    border-radius: 10px;
-    border: 3px solid transparent;
+    background: transparent;
+    border-radius: 99px;
+    border: 1.5px solid transparent;
     background-clip: padding-box;
   }
-  .pane::-webkit-scrollbar-thumb:hover { background: var(--brass-line); background-clip: padding-box; }
-
-  #editor-pane {
-    left: 0;
+  .pane:hover::-webkit-scrollbar-thumb,
+  .pane:focus-within::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    background-clip: padding-box;
+  }
+  .pane::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-thumb-hover);
+    background-clip: padding-box;
   }
 
-  #render-pane {
-    left: 50%;
-    border-left: 1px solid var(--brass-line);
-  }
+  #editor-pane { left: 0; }
+  #render-pane { left: 50%; border-left: 1px solid var(--brass-line); }
 
   .pane-inner {
     max-width: 720px;
@@ -164,19 +190,13 @@
     min-height: 100%;
   }
 
-  /* Editor mode: full width */
   .canvas-wrap.editor-only #render-pane { width: 0; opacity: 0; pointer-events: none; }
   .canvas-wrap.editor-only #editor-pane { width: 100%; }
-
-  /* Split mode */
   .canvas-wrap.split #editor-pane { width: 50%; }
   .canvas-wrap.split #render-pane { width: 50%; opacity: 1; }
-
-  /* Preview only mode */
   .canvas-wrap.preview-only #editor-pane { width: 0; opacity: 0; pointer-events: none; }
   .canvas-wrap.preview-only #render-pane { left: 0; width: 100%; }
 
-  /* Flow mode: single live-rendered editable pane */
   #flow-pane {
     width: 0;
     opacity: 0;
@@ -201,21 +221,19 @@
     caret-color: var(--red);
     transition: var(--color-transition);
   }
-
   #editor::placeholder {
     color: var(--brass);
     opacity: 0.55;
     font-style: italic;
   }
 
-  /* ---------- Rendered markdown styling ---------- */
+  /* ---------- Rendered markdown ---------- */
   #render {
     font-size: 19px;
     line-height: 1.75;
     color: var(--ink);
     transition: var(--color-transition);
   }
-
   #render h1, #render h2, #render h3 {
     font-weight: 600;
     line-height: 1.25;
@@ -244,13 +262,14 @@
   #render pre {
     background: var(--paper-deep);
     padding: 1em 1.2em;
-    border-radius: 4px;
+    border-radius: 5px;
     overflow-x: auto;
     margin: 1em 0;
     border: 1px solid var(--brass-line-soft);
   }
   #render pre code { background: none; padding: 0; }
   #render a { color: var(--red); text-decoration-color: rgba(184,69,60,0.4); }
+  html.dark #render a { text-decoration-color: rgba(210,102,90,0.45); }
   #render hr { border: none; border-top: 1px solid var(--brass-line); margin: 2em 0; }
   #render strong { font-weight: 700; }
   #render em { font-style: italic; }
@@ -265,7 +284,7 @@
     opacity: 0.6;
   }
 
-  /* ---------- Flow pane (live inline WYSIWYG) ---------- */
+  /* ---------- Flow pane ---------- */
   #flow {
     font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
     font-size: 19px;
@@ -276,7 +295,6 @@
     caret-color: var(--red);
     transition: var(--color-transition);
   }
-
   #flow:empty::before {
     content: attr(data-placeholder);
     color: var(--brass);
@@ -284,12 +302,7 @@
     font-style: italic;
     pointer-events: none;
   }
-
-  #flow .md-syntax {
-    opacity: 0.32;
-    font-style: normal;
-  }
-
+  #flow .md-syntax { opacity: 0.32; font-style: normal; }
   #flow div[data-heading] {
     font-weight: 600;
     line-height: 1.3;
@@ -316,54 +329,39 @@
   }
   #flow div { min-height: 1.75em; }
 
-  /* ---------- Floating tab ---------- */
+  /* ---------- Floating panel ---------- */
   #tab {
     position: fixed;
     top: 28px;
     right: 28px;
     z-index: 10;
     background: var(--tab-bg);
-    border-radius: 10px;
-    box-shadow:
-      0 1px 2px rgba(42,38,34,0.08),
-      0 8px 24px rgba(42,38,34,0.14),
-      0 0 0 1px var(--brass-line-soft);
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft), 0 0 0 1px var(--brass-line-soft);
     font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
-    width: 258px;
+    width: 268px;
     user-select: none;
-    transform: rotate(0.4deg);
+    transform: rotate(0.35deg);
     transition: var(--color-transition), box-shadow 0.2s ease, transform 0.2s ease;
   }
 
-  html.dark #tab {
-    box-shadow:
-      0 1px 2px rgba(0,0,0,0.3),
-      0 8px 24px rgba(0,0,0,0.4),
-      0 0 0 1px var(--brass-line-soft);
-  }
-
   #tab.dragging {
-    box-shadow:
-      0 4px 8px rgba(42,38,34,0.12),
-      0 18px 40px rgba(42,38,34,0.22),
-      0 0 0 1px var(--brass-line-soft);
-    transform: rotate(0deg) scale(1.015);
+    box-shadow: var(--shadow-lift), 0 0 0 1px var(--brass-line-soft);
+    transform: rotate(0deg) scale(1.012);
     transition: none;
   }
-
   #tab:not(.dragging) {
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease, var(--color-transition);
   }
 
   .tab-handle {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
+    padding: 11px 13px;
     cursor: grab;
     border-bottom: 1px solid var(--brass-line-soft);
   }
-
   .tab-handle:active { cursor: grabbing; }
 
   .tab-title {
@@ -375,7 +373,6 @@
     align-items: center;
     gap: 8px;
   }
-
   .tab-title .dot {
     width: 6px;
     height: 6px;
@@ -387,7 +384,7 @@
   .tab-handle-actions {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 1px;
     flex-shrink: 0;
   }
 
@@ -413,7 +410,7 @@
     color: var(--brass);
     cursor: pointer;
     font-size: 15px;
-    padding: 2px 4px;
+    padding: 2px 5px;
     line-height: 1;
     border-radius: 4px;
   }
@@ -423,70 +420,165 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    max-height: 400px;
+    gap: 5px;
+    max-height: 520px;
     overflow: hidden;
     transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.25s ease;
   }
-
   #tab.collapsed .tab-body {
     max-height: 0;
     padding: 0 10px;
     opacity: 0;
   }
 
-  .mode-row {
+  /* ---- Document tabs strip ---- */
+  .docs-strip {
     display: flex;
+    align-items: center;
     gap: 4px;
-    padding: 3px;
+    margin-bottom: 4px;
+    padding: 2px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .docs-strip::-webkit-scrollbar { display: none; }
+
+  .doc-tab {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 92px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    position: relative;
+  }
+  .doc-tab:hover { background: var(--brass-line-soft); color: var(--ink); }
+  .doc-tab.active {
     background: var(--paper-deep);
-    border-radius: 7px;
-    margin-bottom: 6px;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--brass-line-soft);
+  }
+  .doc-tab .doc-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    text-align: left;
+  }
+  .doc-tab .doc-close {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--brass);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .doc-tab:hover .doc-close,
+  .doc-tab.active .doc-close { display: flex; }
+  .doc-tab .doc-close:hover { background: var(--brass-line); color: var(--ink); }
+
+  .doc-tab-new {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--brass);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .doc-tab-new:hover { background: var(--brass-line-soft); color: var(--ink); }
+
+  /* Title edit input */
+  .title-edit {
+    width: 100%;
+    border: none;
+    background: var(--paper-deep);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink);
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--brass-line);
   }
 
+  .mode-row {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    background: var(--paper-deep);
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
   .mode-btn {
     flex: 1;
     background: none;
     border: none;
-    padding: 7px 3px;
+    padding: 7px 2px;
     font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 500;
     color: var(--ink-soft);
     cursor: pointer;
-    border-radius: 5px;
-    transition: background 0.15s ease, color 0.15s ease;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
   }
-
   .mode-btn:hover { color: var(--ink); }
-
   .mode-btn.active {
     background: var(--tab-bg);
     color: var(--ink);
-    box-shadow: 0 1px 3px rgba(42,38,34,0.12);
+    box-shadow: 0 1px 3px rgba(42,38,34,0.10);
+  }
+  html.dark .mode-btn.active {
+    background: var(--tab-elevated);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
   }
 
   .tab-action {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 9px 8px;
+    padding: 8px 8px;
     background: none;
     border: none;
     text-align: left;
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--ink);
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 7px;
     width: 100%;
+    transition: background 0.15s ease;
   }
-
   .tab-action:hover { background: var(--brass-line-soft); }
-
-  .tab-action svg { flex-shrink: 0; opacity: 0.75; }
-
+  .tab-action svg { flex-shrink: 0; opacity: 0.72; }
   .tab-action .kbd {
     margin-left: auto;
     font-family: 'Inter', sans-serif;
@@ -500,29 +592,22 @@
   .tab-divider {
     height: 1px;
     background: var(--brass-line-soft);
-    margin: 4px 2px;
+    margin: 3px 2px;
   }
 
   .tab-footer-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 8px 2px 8px;
+    padding: 6px 8px 2px 8px;
     font-size: 11px;
     color: var(--brass);
     font-family: 'Inter', sans-serif;
   }
 
-  /* Collapsed pill state */
-  #tab.collapsed {
-    width: auto;
-  }
-  #tab.collapsed .tab-handle {
-    border-bottom: none;
-    padding: 10px 12px;
-  }
+  #tab.collapsed { width: auto; }
+  #tab.collapsed .tab-handle { border-bottom: none; padding: 10px 12px; }
 
-  /* Save flash */
   .save-flash {
     color: var(--red);
     opacity: 0;
@@ -541,7 +626,7 @@
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     padding: 10px 18px;
-    border-radius: 7px;
+    border-radius: 8px;
     z-index: 20;
     opacity: 0;
     pointer-events: none;
@@ -553,7 +638,7 @@
     transform: translateX(-50%) translateY(0);
   }
 
-  /* ---------- On-site confirmation card ---------- */
+  /* Confirm card */
   #confirmCard {
     position: fixed;
     bottom: 30px;
@@ -565,34 +650,27 @@
     font-family: 'Inter', -apple-system, sans-serif;
     z-index: 25;
     width: 300px;
-    box-shadow:
-      0 2px 4px rgba(42,38,34,0.1),
-      0 16px 40px rgba(42,38,34,0.22),
-      0 0 0 1px var(--brass-line-soft);
+    box-shadow: var(--shadow-lift), 0 0 0 1px var(--brass-line-soft);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1), var(--color-transition);
   }
-
   #confirmCard.show {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(-50%) translateY(0) scale(1);
   }
-
   #confirmText {
     margin: 0 0 14px 0;
     font-size: 13.5px;
     color: var(--ink);
     line-height: 1.5;
   }
-
   .confirm-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
   }
-
   .confirm-btn {
     font-family: 'Inter', sans-serif;
     font-size: 12.5px;
@@ -603,13 +681,11 @@
     cursor: pointer;
     transition: background 0.15s ease, opacity 0.15s ease;
   }
-
   .confirm-btn-quiet {
     background: none;
     color: var(--ink-soft);
   }
   .confirm-btn-quiet:hover { background: var(--brass-line-soft); }
-
   .confirm-btn-loud {
     background: var(--red);
     color: #FBF8F1;
@@ -622,7 +698,7 @@
 
   @media (max-width: 720px) {
     .pane-inner { padding: 80px 24px 40vh 24px; }
-    #tab { width: 226px; right: 16px; top: 16px; }
+    #tab { width: 240px; right: 14px; top: 14px; }
     #confirmCard { width: calc(100% - 32px); }
     .canvas-wrap.split #editor-pane,
     .canvas-wrap.split #render-pane { width: 100%; left: 0; }
@@ -670,6 +746,8 @@
     </span>
   </div>
   <div class="tab-body">
+    <div class="docs-strip" id="docsStrip" role="tablist" aria-label="Documents"></div>
+
     <div class="mode-row">
       <button class="mode-btn active" data-mode="split">Split</button>
       <button class="mode-btn" data-mode="flow">Flow</button>
@@ -726,143 +804,85 @@
   const wordCount = document.getElementById('wordCount');
   const saveFlash = document.getElementById('saveFlash');
   const toast = document.getElementById('toast');
+  const docsStrip = document.getElementById('docsStrip');
+  const flow = document.getElementById('flow');
 
-  // ---------- Minimal markdown renderer (no deps, local only) ----------
+  // ---------- Minimal markdown renderer ----------
   function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function inline(text) {
     text = escapeHtml(text);
-    // code spans first, to protect content
     const codeSpans = [];
     text = text.replace(/`([^`]+)`/g, (m, code) => {
       codeSpans.push(code);
       return `\u0000CODE${codeSpans.length - 1}\u0000`;
     });
-    // images
     text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
-    // links
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    // bold+italic
     text = text.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     text = text.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
-    // strikethrough
     text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-    // restore code spans
     text = text.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => `<code>${codeSpans[i]}</code>`);
     return text;
   }
 
   function renderMarkdown(src) {
     if (!src.trim()) return '<p class="render-empty">Nothing to preview yet.</p>';
-
-    const lines = src.replace(/\r\n/g, '\n').split('\n');
-    let html = '';
-    let i = 0;
-    let inList = null; // 'ul' | 'ol'
-    let inCode = false;
-    let codeBuf = [];
-    let paraBuf = [];
-    let inBlockquote = false;
-    let bqBuf = [];
-
+    const lines = src.split('\n');
+    let html = '', para = [], inCode = false, codeBuf = [], listType = null, bq = [];
     function flushPara() {
-      if (paraBuf.length) {
-        html += `<p>${inline(paraBuf.join(' '))}</p>`;
-        paraBuf = [];
-      }
+      if (para.length) { html += '<p>' + inline(para.join(' ')) + '</p>'; para = []; }
     }
     function closeList() {
-      if (inList) { html += `</${inList}>`; inList = null; }
+      if (listType) { html += listType === 'ul' ? '</ul>' : '</ol>'; listType = null; }
     }
     function flushBq() {
-      if (bqBuf.length) {
-        html += `<blockquote>${inline(bqBuf.join(' '))}</blockquote>`;
-        bqBuf = [];
-      }
-      inBlockquote = false;
+      if (bq.length) { html += '<blockquote>' + bq.map(l => '<p>' + inline(l) + '</p>').join('') + '</blockquote>'; bq = []; }
     }
-
+    let i = 0;
     while (i < lines.length) {
-      const raw = lines[i];
-      const line = raw;
-
-      // code fence
-      if (/^```/.test(line.trim())) {
-        flushPara(); closeList(); flushBq();
-        if (!inCode) { inCode = true; codeBuf = []; }
-        else {
+      const line = lines[i];
+      if (inCode) {
+        if (line.startsWith('```')) {
           html += `<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`;
-          inCode = false;
-        }
+          codeBuf = []; inCode = false;
+        } else codeBuf.push(line);
         i++; continue;
       }
-      if (inCode) { codeBuf.push(raw); i++; continue; }
-
-      const trimmed = line.trim();
-
-      // blank line
-      if (trimmed === '') {
-        flushPara(); closeList(); flushBq();
-        i++; continue;
+      if (line.startsWith('```')) { flushPara(); closeList(); flushBq(); inCode = true; i++; continue; }
+      if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
+        flushPara(); closeList(); flushBq(); html += '<hr>'; i++; continue;
       }
-
-      // heading
-      const h = trimmed.match(/^(#{1,3})\s+(.*)$/);
+      const h = line.match(/^(#{1,3})\s+(.*)$/);
       if (h) {
         flushPara(); closeList(); flushBq();
         const level = h[1].length;
         html += `<h${level}>${inline(h[2])}</h${level}>`;
         i++; continue;
       }
-
-      // hr
-      if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
-        flushPara(); closeList(); flushBq();
-        html += '<hr>';
-        i++; continue;
-      }
-
-      // blockquote
-      if (/^>\s?/.test(trimmed)) {
-        flushPara(); closeList();
-        inBlockquote = true;
-        bqBuf.push(trimmed.replace(/^>\s?/, ''));
-        i++; continue;
-      } else if (inBlockquote) {
-        flushBq();
-      }
-
-      // unordered list
-      const ul = trimmed.match(/^[-*+]\s+(.*)$/);
-      if (ul) {
+      const bqm = line.match(/^>\s?(.*)$/);
+      if (bqm) { flushPara(); closeList(); bq.push(bqm[1]); i++; continue; }
+      else flushBq();
+      const ul = line.match(/^[-*+]\s+(.*)$/);
+      const ol = line.match(/^\d+\.\s+(.*)$/);
+      if (ul || ol) {
         flushPara();
-        if (inList !== 'ul') { closeList(); html += '<ul>'; inList = 'ul'; }
-        html += `<li>${inline(ul[1])}</li>`;
+        const type = ul ? 'ul' : 'ol';
+        if (listType !== type) { closeList(); html += type === 'ul' ? '<ul>' : '<ol>'; listType = type; }
+        html += `<li>${inline((ul || ol)[1])}</li>`;
         i++; continue;
-      }
-
-      // ordered list
-      const ol = trimmed.match(/^\d+\.\s+(.*)$/);
-      if (ol) {
-        flushPara();
-        if (inList !== 'ol') { closeList(); html += '<ol>'; inList = 'ol'; }
-        html += `<li>${inline(ol[1])}</li>`;
-        i++; continue;
-      }
-
-      closeList();
-      paraBuf.push(trimmed);
+      } else closeList();
+      if (line.trim() === '') { flushPara(); i++; continue; }
+      para.push(line);
       i++;
     }
     flushPara(); closeList(); flushBq();
-    if (inCode && codeBuf.length) {
-      html += `<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`;
-    }
+    if (inCode && codeBuf.length) html += `<pre><code>${escapeHtml(codeBuf.join('\n'))}</code></pre>`;
     return html;
   }
 
@@ -872,46 +892,233 @@
     wordCount.textContent = words === 1 ? '1 word' : `${words} words`;
   }
 
-  // ---------- Persistence (local only) ----------
-  const STORAGE_KEY = 'typee-content';
+  // ---------- Multi-document tabs ----------
+  const DOCS_KEY = 'typee-docs-v1';
+  const MAX_DOCS = 12;
+  let docs = [];
+  let activeId = null;
   let saveTimer = null;
+  let debounce = null;
 
-  function save(text) {
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function titleFromContent(text) {
+    const m = text.match(/^#\s+(.+)$/m);
+    if (m) return m[1].trim().slice(0, 28);
+    const first = text.trim().split('\n').find(l => l.trim());
+    if (first) return first.replace(/^#+\s*/, '').trim().slice(0, 28) || 'Untitled';
+    return 'Untitled';
+  }
+
+  function loadDocs() {
     try {
-      localStorage.setItem(STORAGE_KEY, text);
+      const raw = localStorage.getItem(DOCS_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.docs && data.docs.length) {
+          docs = data.docs;
+          activeId = data.activeId || docs[0].id;
+          return;
+        }
+      }
+      // migrate old single-content key
+      const old = localStorage.getItem('typee-content');
+      if (old) {
+        const id = uid();
+        docs = [{ id, title: titleFromContent(old), content: old, mode: 'split' }];
+        activeId = id;
+        persistDocs();
+        try { localStorage.removeItem('typee-content'); } catch (e) {}
+        return;
+      }
+    } catch (e) {}
+    const id = uid();
+    docs = [{ id, title: 'Untitled', content: '', mode: 'split' }];
+    activeId = id;
+  }
+
+  function persistDocs() {
+    try {
+      localStorage.setItem(DOCS_KEY, JSON.stringify({ docs, activeId }));
       saveFlash.classList.add('show');
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => saveFlash.classList.remove('show'), 900);
-    } catch (e) { /* storage unavailable, fail silently */ }
+    } catch (e) {}
   }
 
-  function load() {
-    try { return localStorage.getItem(STORAGE_KEY) || ''; }
-    catch (e) { return ''; }
+  function getActive() {
+    return docs.find(d => d.id === activeId) || docs[0];
+  }
+
+  function currentMarkdownText() {
+    if (canvasWrap.className.includes('flow')) return getFlowPlainText();
+    return editor.value;
+  }
+
+  function saveActiveContent() {
+    const doc = getActive();
+    if (!doc) return;
+    const text = currentMarkdownText();
+    doc.content = text;
+    doc.title = titleFromContent(text);
+    // keep mode
+    const modeClass = canvasWrap.className.replace('canvas-wrap ', '').trim() || 'split';
+    doc.mode = modeClass;
+    persistDocs();
+    renderDocsStrip();
+  }
+
+  function applyDoc(doc) {
+    editor.value = doc.content || '';
+    render.innerHTML = renderMarkdown(editor.value);
+    updateWordCount(editor.value);
+    // mode
+    const mode = doc.mode || 'split';
+    modeButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    if (mode === 'flow') {
+      syncFlowFromEditor();
+      canvasWrap.className = 'canvas-wrap flow';
+      setTimeout(() => flow.focus(), 40);
+    } else {
+      canvasWrap.className = 'canvas-wrap ' + mode;
+      if (mode !== 'preview-only') setTimeout(() => editor.focus(), 40);
+    }
+  }
+
+  function switchDoc(id) {
+    if (id === activeId) return;
+    // flush current
+    saveActiveContent();
+    activeId = id;
+    applyDoc(getActive());
+    persistDocs();
+    renderDocsStrip();
+  }
+
+  function newDoc() {
+    if (docs.length >= MAX_DOCS) {
+      showToast('Maximum ' + MAX_DOCS + ' tabs');
+      return;
+    }
+    saveActiveContent();
+    const id = uid();
+    docs.push({ id, title: 'Untitled', content: '', mode: 'split' });
+    activeId = id;
+    applyDoc(getActive());
+    persistDocs();
+    renderDocsStrip();
+    editor.focus();
+  }
+
+  function closeDoc(id) {
+    if (docs.length <= 1) {
+      // just clear
+      const doc = getActive();
+      doc.content = '';
+      doc.title = 'Untitled';
+      applyDoc(doc);
+      persistDocs();
+      renderDocsStrip();
+      showToast('Page cleared');
+      return;
+    }
+    const idx = docs.findIndex(d => d.id === id);
+    if (idx < 0) return;
+    const wasActive = id === activeId;
+    docs.splice(idx, 1);
+    if (wasActive) {
+      activeId = docs[Math.min(idx, docs.length - 1)].id;
+      applyDoc(getActive());
+    }
+    persistDocs();
+    renderDocsStrip();
+  }
+
+  function renderDocsStrip() {
+    docsStrip.innerHTML = '';
+    docs.forEach(doc => {
+      const btn = document.createElement('button');
+      btn.className = 'doc-tab' + (doc.id === activeId ? ' active' : '');
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', doc.id === activeId ? 'true' : 'false');
+      btn.title = doc.title;
+      const label = document.createElement('span');
+      label.className = 'doc-label';
+      label.textContent = doc.title || 'Untitled';
+      btn.appendChild(label);
+
+      const close = document.createElement('button');
+      close.className = 'doc-close';
+      close.innerHTML = '×';
+      close.title = 'Close';
+      close.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (docs.length > 1 && (doc.content || '').trim()) {
+          showConfirm('Close this note?', () => closeDoc(doc.id));
+        } else {
+          closeDoc(doc.id);
+        }
+      });
+      btn.appendChild(close);
+
+      btn.addEventListener('click', () => switchDoc(doc.id));
+      btn.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startTitleEdit(doc, label, btn);
+      });
+      docsStrip.appendChild(btn);
+    });
+
+    const add = document.createElement('button');
+    add.className = 'doc-tab-new';
+    add.title = 'New note (Ctrl+Alt+N)';
+    add.innerHTML = '+';
+    add.addEventListener('click', newDoc);
+    docsStrip.appendChild(add);
+  }
+
+  function startTitleEdit(doc, labelEl, btn) {
+    const input = document.createElement('input');
+    input.className = 'title-edit';
+    input.value = doc.title === 'Untitled' ? '' : doc.title;
+    input.placeholder = 'Title';
+    btn.replaceChild(input, labelEl);
+    input.focus();
+    input.select();
+    const finish = () => {
+      const v = input.value.trim().slice(0, 40) || titleFromContent(doc.content);
+      doc.title = v || 'Untitled';
+      persistDocs();
+      renderDocsStrip();
+    };
+    input.addEventListener('blur', finish);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.value = doc.title; input.blur(); }
+    });
   }
 
   // ---------- Core update loop ----------
-  let debounce = null;
   function update() {
     const text = editor.value;
     render.innerHTML = renderMarkdown(text);
     updateWordCount(text);
     clearTimeout(debounce);
-    debounce = setTimeout(() => save(text), 400);
+    debounce = setTimeout(() => {
+      saveActiveContent();
+    }, 400);
   }
 
   editor.addEventListener('input', update);
 
-  // Init
-  const saved = load();
-  if (saved) editor.value = saved;
-  update();
-  editor.focus();
-
-  // ---------- Theme (dark / light) ----------
+  // ---------- Theme ----------
   const THEME_KEY = 'typee-theme';
   const themeToggle = document.getElementById('themeToggle');
   const themeIcon = document.getElementById('themeIcon');
+  const themeColorMeta = document.getElementById('themeColorMeta');
 
   const sunPath = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
   const moonPath = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>';
@@ -921,6 +1128,7 @@
     themeIcon.innerHTML = isDark ? moonPath : sunPath;
     themeToggle.title = isDark ? 'Switch to day page' : 'Switch to night page';
     themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    if (themeColorMeta) themeColorMeta.setAttribute('content', isDark ? '#1A1815' : '#F5F0E6');
   }
 
   function loadTheme() {
@@ -941,7 +1149,6 @@
 
   // ---------- Mode switching ----------
   const modeButtons = document.querySelectorAll('.mode-btn');
-  const flow = document.getElementById('flow');
 
   modeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -956,6 +1163,9 @@
       }
 
       canvasWrap.className = 'canvas-wrap ' + mode;
+      const doc = getActive();
+      if (doc) doc.mode = mode;
+      persistDocs();
 
       if (mode === 'flow') {
         setTimeout(() => flow.focus(), 50);
@@ -965,14 +1175,8 @@
     });
   });
 
-  // ---------- Flow mode: live inline markdown rendering ----------
-  // Each line is a <div>. We re-render only the active line's inline
-  // styling on input, and restore caret position by character offset
-  // so typing never jumps the cursor.
-
-  function flowLineToPlainText(div) {
-    return div.textContent;
-  }
+  // ---------- Flow mode ----------
+  function flowLineToPlainText(div) { return div.textContent; }
 
   function getFlowPlainText() {
     const divs = flow.querySelectorAll(':scope > div');
@@ -989,9 +1193,7 @@
       renderFlowLine(div, line);
       flow.appendChild(div);
     });
-    if (!lines.length || (lines.length === 1 && lines[0] === '')) {
-      flow.innerHTML = '';
-    }
+    if (!lines.length || (lines.length === 1 && lines[0] === '')) flow.innerHTML = '';
   }
 
   function syncEditorFromFlow() {
@@ -999,12 +1201,8 @@
     update();
   }
 
-  // Renders a single line's inline markdown into styled spans,
-  // keeping original syntax characters visible but dimmed (so
-  // editing stays predictable — nothing silently disappears).
   function renderFlowLine(div, raw) {
     if (raw === '') { div.innerHTML = '<br>'; div.removeAttribute('data-heading'); return; }
-
     let text = raw;
     const heading = text.match(/^(#{1,3})(\s+)(.*)$/);
     const quote = text.match(/^(>\s?)(.*)$/);
@@ -1012,26 +1210,24 @@
     if (heading) {
       const level = heading[1].length;
       div.setAttribute('data-heading', level);
-      div.innerHTML = `<span class="md-syntax">${escapeHtml(heading[1] + heading[2])}</span><span class="flow-h flow-h${level}">${inlineFlow(heading[3]) || '<br>'}</span>`;
+      div.className = 'flow-h' + level;
+      const marks = '<span class="md-syntax">' + heading[1] + heading[2] + '</span>';
+      div.innerHTML = marks + inlineFlow(heading[3]);
       return;
     }
-
     div.removeAttribute('data-heading');
-
+    div.className = '';
     if (quote) {
-      div.innerHTML = `<span class="md-quote-line"><span class="md-syntax">${escapeHtml(quote[1])}</span>${inlineFlow(quote[2])}</span>`;
+      div.className = 'md-quote-line';
+      div.innerHTML = '<span class="md-syntax">' + quote[1] + '</span>' + inlineFlow(quote[2]);
       return;
     }
-
-    div.innerHTML = inlineFlow(text) || '<br>';
+    div.innerHTML = inlineFlow(text);
   }
 
-  // Same inline rules as the static renderer, but keeps ** and _ etc
-  // visible (dimmed) rather than stripping them, since this pane is
-  // still the editable source of truth.
-  function inlineFlow(text) {
-    let t = escapeHtml(text);
+  function inlineFlow(t) {
     const spans = [];
+    t = escapeHtml(t);
     t = t.replace(/`([^`]+)`/g, (m, code) => {
       spans.push(`<span class="md-syntax">\`</span><span class="md-code">${code}</span><span class="md-syntax">\`</span>`);
       return `\u0000S${spans.length - 1}\u0000`;
@@ -1054,7 +1250,6 @@
     return content;
   }
 
-  // Caret offset helpers (character offset within a single line div)
   function getCaretOffset(div) {
     const sel = window.getSelection();
     if (!sel.rangeCount) return 0;
@@ -1080,7 +1275,6 @@
       }
       count += len;
     }
-    // offset beyond content — place at end
     const range = document.createRange();
     const sel = window.getSelection();
     range.selectNodeContents(div);
@@ -1093,19 +1287,14 @@
     const sel = window.getSelection();
     if (!sel.rangeCount) return null;
     let node = sel.getRangeAt(0).startContainer;
-    while (node && node.parentNode !== flow && node !== flow) {
-      node = node.parentNode;
-    }
+    while (node && node.parentNode !== flow && node !== flow) node = node.parentNode;
     if (node === flow) return null;
     return node;
   }
 
   let flowDebounce = null;
-  flow.addEventListener('input', (e) => {
-    // Ensure every top-level child is a div (contenteditable sometimes
-    // inserts loose text nodes / uses different wrapper elements).
+  flow.addEventListener('input', () => {
     normalizeFlowChildren();
-
     const lineDiv = getCurrentLineDiv();
     if (lineDiv) {
       const offset = getCaretOffset(lineDiv);
@@ -1113,14 +1302,13 @@
       renderFlowLine(lineDiv, raw);
       setCaretOffset(lineDiv, offset);
     }
-
     clearTimeout(flowDebounce);
     flowDebounce = setTimeout(() => {
       const text = getFlowPlainText();
       editor.value = text;
       render.innerHTML = renderMarkdown(text);
       updateWordCount(text);
-      save(text);
+      saveActiveContent();
     }, 250);
   });
 
@@ -1131,7 +1319,6 @@
         div.textContent = node.textContent;
         flow.replaceChild(div, node);
       } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'DIV') {
-        // stray element at top level (e.g. browser inserted <p>, <br> wrapper) — wrap it
         const div = document.createElement('div');
         div.innerHTML = node.outerHTML;
         flow.replaceChild(div, node);
@@ -1143,15 +1330,12 @@
     if (e.key === 'Enter') {
       e.preventDefault();
       const lineDiv = getCurrentLineDiv();
-      const sel = window.getSelection();
       const offset = lineDiv ? getCaretOffset(lineDiv) : 0;
       const raw = lineDiv ? lineDiv.textContent : '';
       const before = raw.slice(0, offset);
       const after = raw.slice(offset);
-
       const newDiv = document.createElement('div');
       renderFlowLine(newDiv, after);
-
       if (lineDiv) {
         renderFlowLine(lineDiv, before);
         lineDiv.after(newDiv);
@@ -1159,14 +1343,13 @@
         flow.appendChild(newDiv);
       }
       setCaretOffset(newDiv, 0);
-
       clearTimeout(flowDebounce);
       flowDebounce = setTimeout(() => {
         const text = getFlowPlainText();
         editor.value = text;
         render.innerHTML = renderMarkdown(text);
         updateWordCount(text);
-        save(text);
+        saveActiveContent();
       }, 100);
     }
   });
@@ -1193,34 +1376,28 @@
     URL.revokeObjectURL(url);
   }
 
-  // Always pull the freshest text regardless of active mode — Flow
-  // mode's sync to `editor.value` is debounced, so export/copy must
-  // not rely on that debounce having already fired.
-  function currentMarkdownText() {
-    if (canvasWrap.className.includes('flow')) return getFlowPlainText();
-    return editor.value;
-  }
-
   document.getElementById('exportMd').addEventListener('click', () => {
-    downloadFile('typee-note.md', currentMarkdownText(), 'text/markdown');
-    showToast('Downloaded typee-note.md');
+    const name = (getActive().title || 'typee-note').replace(/[^\w\-]+/g, '-').slice(0, 40) || 'typee-note';
+    downloadFile(name + '.md', currentMarkdownText(), 'text/markdown');
+    showToast('Downloaded ' + name + '.md');
   });
 
   document.getElementById('exportHtml').addEventListener('click', () => {
     const renderedHtml = renderMarkdown(currentMarkdownText());
+    const isDark = document.documentElement.classList.contains('dark');
     const doc = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Typee note</title>
+<html><head><meta charset="UTF-8"><title>${escapeHtml(getActive().title || 'Typee note')}</title>
 <style>
-body{font-family:Georgia,serif;max-width:720px;margin:60px auto;padding:0 24px;line-height:1.75;color:#2A2622;background:#F6F1E7;}
-h1,h2,h3{font-weight:600;line-height:1.25;}
-blockquote{border-left:3px solid #B8453C;margin:1em 0;padding-left:1.1em;color:#55504A;font-style:italic;}
-code{background:#ECE3CE;padding:0.1em 0.4em;border-radius:3px;}
-pre{background:#ECE3CE;padding:1em 1.2em;border-radius:4px;overflow-x:auto;}
-pre code{background:none;padding:0;}
-a{color:#B8453C;}
+  body { font-family: Georgia, 'Times New Roman', serif; max-width: 720px; margin: 40px auto; padding: 0 24px; line-height: 1.75; color: ${isDark ? '#EDE6D6' : '#2A2622'}; background: ${isDark ? '#1A1815' : '#F5F0E6'}; }
+  h1,h2,h3 { line-height: 1.25; }
+  blockquote { border-left: 3px solid #B8453C; padding-left: 1em; color: ${isDark ? '#B0A694' : '#5C564E'}; font-style: italic; }
+  code { background: ${isDark ? '#24211D' : '#EBE3D4'}; padding: 0.1em 0.4em; border-radius: 3px; }
+  pre { background: ${isDark ? '#24211D' : '#EBE3D4'}; padding: 1em; border-radius: 5px; overflow-x: auto; }
+  a { color: #B8453C; }
 </style></head><body>${renderedHtml}</body></html>`;
-    downloadFile('typee-note.html', doc, 'text/html');
-    showToast('Downloaded typee-note.html');
+    const name = (getActive().title || 'typee-note').replace(/[^\w\-]+/g, '-').slice(0, 40) || 'typee-note';
+    downloadFile(name + '.html', doc, 'text/html');
+    showToast('Downloaded ' + name + '.html');
   });
 
   document.getElementById('copyBtn').addEventListener('click', async () => {
@@ -1235,17 +1412,18 @@ a{color:#B8453C;}
   });
 
   document.getElementById('clearBtn').addEventListener('click', () => {
-    if (!editor.value.trim() && !flow.textContent.trim()) return;
+    if (!currentMarkdownText().trim()) return;
     showConfirm('Clear this page? This can\'t be undone.', () => {
       editor.value = '';
       flow.innerHTML = '';
       update();
+      saveActiveContent();
       if (canvasWrap.className.includes('flow')) flow.focus(); else editor.focus();
       showToast('Page cleared');
     });
   });
 
-  // ---------- On-site confirmation (replaces native confirm()) ----------
+  // ---------- Confirm ----------
   const confirmCard = document.getElementById('confirmCard');
   const confirmText = document.getElementById('confirmText');
   const confirmYes = document.getElementById('confirmYes');
@@ -1257,25 +1435,21 @@ a{color:#B8453C;}
     pendingConfirm = onConfirm;
     confirmCard.classList.add('show');
   }
-
   function hideConfirm() {
     confirmCard.classList.remove('show');
     pendingConfirm = null;
   }
-
   confirmYes.addEventListener('click', () => {
     const fn = pendingConfirm;
     hideConfirm();
     if (fn) fn();
   });
-
   confirmNo.addEventListener('click', hideConfirm);
-
   document.addEventListener('keydown', (e) => {
     if (confirmCard.classList.contains('show') && e.key === 'Escape') hideConfirm();
   });
 
-  // ---------- Draggable tab ----------
+  // ---------- Draggable panel ----------
   const tab = document.getElementById('tab');
   const handle = document.getElementById('tabHandle');
   const collapseBtn = document.getElementById('tabCollapse');
@@ -1292,7 +1466,7 @@ a{color:#B8453C;}
   }
 
   handle.addEventListener('mousedown', (e) => {
-    if (e.target.closest('#tabCollapse') || e.target.closest('#themeToggle')) return;
+    if (e.target.closest('#tabCollapse') || e.target.closest('#themeToggle') || e.target.closest('.doc-tab') || e.target.closest('.doc-tab-new')) return;
     dragging = true;
     tab.classList.add('dragging');
     const rect = tab.getBoundingClientRect();
@@ -1300,20 +1474,13 @@ a{color:#B8453C;}
     offsetY = e.clientY - rect.top;
     e.preventDefault();
   });
-
   window.addEventListener('mousemove', (e) => {
     if (!dragging) return;
     setTabPosition(e.clientX - offsetX, e.clientY - offsetY);
   });
-
   window.addEventListener('mouseup', () => {
-    if (dragging) {
-      dragging = false;
-      tab.classList.remove('dragging');
-    }
+    if (dragging) { dragging = false; tab.classList.remove('dragging'); }
   });
-
-  // touch support
   handle.addEventListener('touchstart', (e) => {
     if (e.target.closest('#tabCollapse') || e.target.closest('#themeToggle')) return;
     dragging = true;
@@ -1323,13 +1490,11 @@ a{color:#B8453C;}
     offsetX = t.clientX - rect.left;
     offsetY = t.clientY - rect.top;
   }, { passive: true });
-
   window.addEventListener('touchmove', (e) => {
     if (!dragging) return;
     const t = e.touches[0];
     setTabPosition(t.clientX - offsetX, t.clientY - offsetY);
   }, { passive: true });
-
   window.addEventListener('touchend', () => {
     if (dragging) { dragging = false; tab.classList.remove('dragging'); }
   });
@@ -1340,15 +1505,69 @@ a{color:#B8453C;}
     collapseBtn.setAttribute('aria-label', tab.classList.contains('collapsed') ? 'Expand panel' : 'Collapse panel');
   });
 
-  // ---------- Keyboard shortcuts ----------
+  // ---------- Keyboard shortcuts (Ctrl/Cmd+Alt — avoids browser defaults) ----------
+  // New note:  Ctrl/Cmd+Alt+N
+  // Close:     Ctrl/Cmd+Alt+W
+  // Cycle:     Ctrl/Cmd+Alt+[  /  ]
+  // Jump:      Ctrl/Cmd+Alt+1..9
+  // Export:    Ctrl/Cmd+S
   document.addEventListener('keydown', (e) => {
     const mod = e.metaKey || e.ctrlKey;
-    if (mod && e.key === 's') {
+    if (!mod) return;
+
+    // Ctrl/Cmd + Alt + N → new note
+    if (e.altKey && (e.key === 'n' || e.key === 'N')) {
       e.preventDefault();
-      downloadFile('typee-note.md', currentMarkdownText(), 'text/markdown');
-      showToast('Downloaded typee-note.md');
+      newDoc();
+      return;
+    }
+    // Ctrl/Cmd + Alt + W → close current note
+    if (e.altKey && (e.key === 'w' || e.key === 'W')) {
+      e.preventDefault();
+      const doc = getActive();
+      if (docs.length > 1 && (doc.content || '').trim()) {
+        showConfirm('Close this note?', () => closeDoc(doc.id));
+      } else {
+        closeDoc(doc.id);
+      }
+      return;
+    }
+    // Ctrl/Cmd + S → export md (no Alt/Shift)
+    if (!e.shiftKey && !e.altKey && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      const name = (getActive().title || 'typee-note').replace(/[^\w\-]+/g, '-').slice(0, 40) || 'typee-note';
+      downloadFile(name + '.md', currentMarkdownText(), 'text/markdown');
+      showToast('Downloaded ' + name + '.md');
+      return;
+    }
+    // Ctrl/Cmd + Alt + [ / ] → cycle notes
+    if (e.altKey && (e.key === '[' || e.key === '{' || e.code === 'BracketLeft')) {
+      e.preventDefault();
+      const idx = docs.findIndex(d => d.id === activeId);
+      switchDoc(docs[(idx - 1 + docs.length) % docs.length].id);
+      return;
+    }
+    if (e.altKey && (e.key === ']' || e.key === '}' || e.code === 'BracketRight')) {
+      e.preventDefault();
+      const idx = docs.findIndex(d => d.id === activeId);
+      switchDoc(docs[(idx + 1) % docs.length].id);
+      return;
+    }
+    // Ctrl/Cmd + Alt + 1-9 → jump to note
+    if (e.altKey && e.key >= '1' && e.key <= '9') {
+      const n = parseInt(e.key, 10) - 1;
+      if (docs[n]) {
+        e.preventDefault();
+        switchDoc(docs[n].id);
+      }
     }
   });
+
+  // ---------- Init ----------
+  loadDocs();
+  applyDoc(getActive());
+  renderDocsStrip();
+  editor.focus();
 })();
 </script>
 
