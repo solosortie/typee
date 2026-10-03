@@ -421,7 +421,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
-    max-height: 520px;
+    max-height: 560px;
     overflow: hidden;
     transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.25s ease;
   }
@@ -605,6 +605,59 @@
     font-family: 'Inter', sans-serif;
   }
 
+  /* Keybinds cheat-sheet */
+  .keys-section {
+    margin-top: 2px;
+    padding: 6px 6px 4px 6px;
+    border-radius: 8px;
+    background: var(--paper-deep);
+  }
+  .keys-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brass);
+    padding: 0 2px 5px 2px;
+  }
+  .keys-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 2px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .keys-row span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .keys-row .kbd {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: var(--brass);
+    background: var(--tab-bg);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.01em;
+  }
+  html.dark .keys-row .kbd {
+    background: var(--tab-elevated);
+  }
+
+  /* Flow: dimmer syntax, list markers */
+  #flow .md-syntax { opacity: 0.28; }
+  #flow .md-list-mark {
+    color: var(--brass);
+    opacity: 0.7;
+  }
+
   #tab.collapsed { width: auto; }
   #tab.collapsed .tab-handle { border-bottom: none; padding: 10px 12px; }
 
@@ -778,6 +831,15 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
       Clear page
     </button>
+
+    <div class="keys-section" aria-label="Keyboard shortcuts">
+      <div class="keys-title">Keys</div>
+      <div class="keys-row"><span>New note</span><span class="kbd">⌃⌥N</span></div>
+      <div class="keys-row"><span>Close note</span><span class="kbd">⌃⌥W</span></div>
+      <div class="keys-row"><span>Cycle notes</span><span class="kbd">⌃⌥[ ]</span></div>
+      <div class="keys-row"><span>Jump 1–9</span><span class="kbd">⌃⌥1–9</span></div>
+      <div class="keys-row"><span>Export .md</span><span class="kbd">⌃S</span></div>
+    </div>
 
     <div class="tab-footer-row">
       <span id="wordCount">0 words</span>
@@ -1202,26 +1264,49 @@
   }
 
   function renderFlowLine(div, raw) {
-    if (raw === '') { div.innerHTML = '<br>'; div.removeAttribute('data-heading'); return; }
+    if (raw === '') {
+      div.innerHTML = '<br>';
+      div.removeAttribute('data-heading');
+      div.removeAttribute('data-list');
+      div.className = '';
+      return;
+    }
     let text = raw;
     const heading = text.match(/^(#{1,3})(\s+)(.*)$/);
     const quote = text.match(/^(>\s?)(.*)$/);
+    const ul = text.match(/^([-*+])(\s+)(.*)$/);
+    const ol = text.match(/^(\d+\.)(\s+)(.*)$/);
 
     if (heading) {
       const level = heading[1].length;
       div.setAttribute('data-heading', level);
+      div.removeAttribute('data-list');
       div.className = 'flow-h' + level;
       const marks = '<span class="md-syntax">' + heading[1] + heading[2] + '</span>';
       div.innerHTML = marks + inlineFlow(heading[3]);
       return;
     }
     div.removeAttribute('data-heading');
-    div.className = '';
     if (quote) {
+      div.removeAttribute('data-list');
       div.className = 'md-quote-line';
       div.innerHTML = '<span class="md-syntax">' + quote[1] + '</span>' + inlineFlow(quote[2]);
       return;
     }
+    if (ul) {
+      div.setAttribute('data-list', 'ul');
+      div.className = '';
+      div.innerHTML = '<span class="md-syntax md-list-mark">' + ul[1] + ul[2] + '</span>' + inlineFlow(ul[3]);
+      return;
+    }
+    if (ol) {
+      div.setAttribute('data-list', 'ol');
+      div.className = '';
+      div.innerHTML = '<span class="md-syntax md-list-mark">' + ol[1] + ol[2] + '</span>' + inlineFlow(ol[3]);
+      return;
+    }
+    div.removeAttribute('data-list');
+    div.className = '';
     div.innerHTML = inlineFlow(text);
   }
 
@@ -1334,15 +1419,34 @@
       const raw = lineDiv ? lineDiv.textContent : '';
       const before = raw.slice(0, offset);
       const after = raw.slice(offset);
+
+      // List continue / exit
+      let nextRaw = after;
+      const ulOnly = before.match(/^([-*+])\s*$/);
+      const olOnly = before.match(/^(\d+)\.\s*$/);
+      const ulItem = before.match(/^([-*+])(\s+)(.*)$/);
+      const olItem = before.match(/^(\d+)\.(\s+)(.*)$/);
+
+      if ((ulOnly || olOnly) && !after) {
+        renderFlowLine(lineDiv, '');
+        nextRaw = '';
+      } else if (ulItem && !after) {
+        nextRaw = ulItem[1] + ulItem[2];
+      } else if (olItem && !after) {
+        const n = parseInt(olItem[1], 10) + 1;
+        nextRaw = n + '.' + olItem[2];
+      }
+
       const newDiv = document.createElement('div');
-      renderFlowLine(newDiv, after);
+      renderFlowLine(newDiv, nextRaw);
       if (lineDiv) {
         renderFlowLine(lineDiv, before);
         lineDiv.after(newDiv);
       } else {
         flow.appendChild(newDiv);
       }
-      setCaretOffset(newDiv, 0);
+      const mark = nextRaw.match(/^([-*+]\s+|\d+\.\s+)/);
+      setCaretOffset(newDiv, mark ? mark[0].length : 0);
       clearTimeout(flowDebounce);
       flowDebounce = setTimeout(() => {
         const text = getFlowPlainText();
