@@ -1,10 +1,9 @@
 # Typee
 
-A single-page Markdown editor. Paper-textured, distraction-free, and fully local — nothing you write ever leaves your browser.
+A single page Markdown editor. Paper-textured, distraction-free, and fully local. nothing you write ever leaves your browser.
 
-**[Live demo →](https://typee.pacify.site)**
+**[Live demo](https://typee.pages.dev/)**
 
-![Typee preview](assets/og-image.png)
 
 ## What it is
 
